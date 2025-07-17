@@ -50,6 +50,8 @@ export const env = createEnv({
     GOOGLE_API_KEY: z.string().optional(),
     GROQ_API_KEY: z.string().optional(),
     OPENROUTER_API_KEY: z.string().optional(),
+    IMAP_ENCRYPT_SECRET: z.string().optional(),
+    IMAP_ENCRYPT_SALT: z.string().optional(),
     UPSTASH_REDIS_URL: z.string().optional(),
     UPSTASH_REDIS_TOKEN: z.string().optional(),
     REDIS_URL: z.string().optional(), // used for subscriptions
