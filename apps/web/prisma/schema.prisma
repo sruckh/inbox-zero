@@ -24,6 +24,9 @@ model Account {
   scope             String?
   id_token          String?  @db.Text
   session_state     String?
+  imap_host         String?
+  imap_port         Int?
+  imap_username     String?
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   emailAccount EmailAccount?
