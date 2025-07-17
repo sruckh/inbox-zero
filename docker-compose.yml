@@ -1,1 +1,77 @@
-name: inbox-zero-services\nservices:\n  db:\n    image: postgres\n    restart: always\n    container_name: inbox-zero-db\n    environment:\n      - POSTGRES_USER=${POSTGRES_USER:-postgres}\n      - POSTGRES_DB=${POSTGRES_DB:-inboxzero}\n      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}\n    volumes:\n      - database-data:/var/lib/postgresql/data/\n    networks:\n      - shared_net\n\n  redis:\n    image: redis\n    volumes:\n      - database-data:/data\n    networks:\n      - shared_net\n\n  serverless-redis-http:\n    image: hiett/serverless-redis-http:latest\n    env_file:\n      - ./apps/web/.env\n    environment:\n      SRH_MODE: env\n      SRH_TOKEN: ${UPSTASH_REDIS_TOKEN}\n      SRH_CONNECTION_STRING: "redis://redis:6379"\n    networks:\n      - shared_net\n\n  web:\n    image: ghcr.io/elie222/inbox-zero:latest\n    pull_policy: if_not_present\n    build:\n      context: .\n      dockerfile: ./docker/Dockerfile.prod\n    env_file:\n      - ./apps/web/.env\n    depends_on:\n      - db\n      - redis\n    networks:\n      - shared_net\n    environment:\n      DATABASE_URL: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-inboxzero}?schema=public"\n      DIRECT_URL: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-inboxzero}?schema=public"\n      UPSTASH_REDIS_URL: "http://serverless-redis-http:80"\n      UPSTASH_REDIS_TOKEN: "${UPSTASH_REDIS_TOKEN}"\n\nvolumes:\n  database-data:\n\nnetworks:\n  shared_net:\n    external: true\n
+name: inbox-zero-services
+
+services:
+  db:
+    image: postgres:15
+    restart: always
+    container_name: inbox-zero-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-inboxzero}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    volumes:
+      - database-data:/var/lib/postgresql/data
+    networks:
+      - shared_net
+    expose:
+      - "5432"
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    container_name: inbox-zero-redis
+    volumes:
+      - redis-data:/data
+    networks:
+      - shared_net
+    expose:
+      - "6379"
+
+  serverless-redis-http:
+    image: hiett/serverless-redis-http:latest
+    restart: always
+    container_name: inbox-zero-serverless-redis
+    env_file:
+      - ./apps/web/.env
+    environment:
+      SRH_MODE: env
+      SRH_TOKEN: ${UPSTASH_REDIS_TOKEN}
+      SRH_CONNECTION_STRING: "redis://redis:6379"
+    networks:
+      - shared_net
+    expose:
+      - "80"
+    depends_on:
+      - redis
+
+  web:
+    image: ghcr.io/elie222/inbox-zero:latest
+    pull_policy: if_not_present
+    restart: always
+    container_name: inbox-zero-web
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.prod
+    env_file:
+      - ./apps/web/.env
+    depends_on:
+      - db
+      - redis
+      - serverless-redis-http
+    networks:
+      - shared_net
+    expose:
+      - "3000"
+    environment:
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-inboxzero}?schema=public"
+      DIRECT_URL: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-inboxzero}?schema=public"
+      UPSTASH_REDIS_URL: "http://serverless-redis-http:80"
+      UPSTASH_REDIS_TOKEN: "${UPSTASH_REDIS_TOKEN}"
+
+volumes:
+  database-data:
+  redis-data:
+
+networks:
+  shared_net:
+    external: true
