@@ -143,7 +143,9 @@
     "typescript": "5.8.3",
     "usehooks-ts": "3.1.1",
     "zod": "3.25.46",
-    "zod-to-json-schema": "3.24.5"
+    "zod-to-json-schema": "3.24.5",
+    "node-imap": "^0.9.6",
+    "mailparser": "^3.7.4"
   },
   "devDependencies": {
     "@headlessui/tailwindcss": "0.2.2",
@@ -171,7 +173,8 @@
     "tsconfig": "workspace:*",
     "vite-tsconfig-paths": "5.1.4",
     "vitest": "3.1.4",
-    "vitest-mock-extended": "3.1.0"
+    "vitest-mock-extended": "3.1.0",
+    "@types/node-imap": "^0.9.3"
   },
   "engines": {
     "node": ">=22.0.0"
